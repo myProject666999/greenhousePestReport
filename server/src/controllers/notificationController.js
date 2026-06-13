@@ -67,3 +67,18 @@ exports.getUnreadCount = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.createNotification = async (user_id, work_order_id, type, content) => {
+  try {
+    await Notification.create({
+      user_id,
+      work_order_id,
+      type,
+      content
+    });
+    log.api('创建通知成功: user_id=%s, type=%s', user_id, type);
+  } catch (error) {
+    log.error('创建通知失败: %s', error.message);
+    throw error;
+  }
+};

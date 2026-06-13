@@ -62,7 +62,10 @@ const TechnicianDashboard = () => {
       message.success('认领成功');
       loadOrders();
       loadOverview();
-    } catch {
+    } catch (error) {
+      const errMsg = error.response?.data?.message || '认领失败，请刷新页面重试';
+      message.error(errMsg);
+      loadOrders();
     }
   };
 

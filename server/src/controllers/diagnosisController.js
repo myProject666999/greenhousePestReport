@@ -1,4 +1,5 @@
-const { Diagnosis, WorkOrder, Notification } = require('../models');
+const { Diagnosis, WorkOrder, PestType, User } = require('../models');
+const { createNotification } = require('./notificationController');
 const log = require('../utils/logger');
 
 exports.create = async (req, res, next) => {
@@ -50,13 +51,16 @@ exports.create = async (req, res, next) => {
       diagnosed_at: new Date()
     });
 
-    await Notification.create({
-      user_id: workOrder.farmer_id,
-      work_order_id: workOrder.id,
-      type: 'diagnosis_done',
-      title: '您的病虫害报告已有诊断结果',
-      content: `工单${workOrder.order_no}已被诊断为${pest_name || '病虫害'}，请查看处置方案。`
-    });
+    try {
+      await createNotification(
+        workOrder.farmer_id,
+        workOrder.id,
+        'diagnosis_done',
+        `工单${workOrder.order_no}已被诊断为${pest_name || '病虫害'}，请查看处置方案。`
+      );
+    } catch (notifyErr) {
+      log.error('创建通知失败: %s', notifyErr.message);
+    }
 
     log.api('诊断创建成功: diagnosis_id=%s', diagnosis.id);
     res.status(201).json({ code: 201, message: '诊断成功', data: diagnosis });
@@ -72,8 +76,8 @@ exports.getByWorkOrder = async (req, res, next) => {
       where: { work_order_id },
       include: [
         { model: WorkOrder, as: 'work_order' },
-        { model: require('../models/PestType'), as: 'pest_type' },
-        { model: require('../models/User'), as: 'technician', attributes: ['id', 'real_name', 'phone'] }
+        { model: PestType, as: 'pest_type' },
+        { model: User, as: 'technician', attributes: ['id', 'real_name', 'phone'] }
       ]
     });
 

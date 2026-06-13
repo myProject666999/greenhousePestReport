@@ -1,4 +1,5 @@
 const { Feedback, WorkOrder, Diagnosis } = require('../models');
+const { createNotification } = require('./notificationController');
 const log = require('../utils/logger');
 
 exports.create = async (req, res, next) => {
@@ -41,6 +42,18 @@ exports.create = async (req, res, next) => {
       });
     } else if (feedback_type === 'day3' && result !== 'recovered') {
       await workOrder.update({ status: 'feedback_pending' });
+    }
+
+    try {
+      const resultText = result === 'recovered' ? '好转' : result === 'no_change' ? '无变化' : '加重';
+      await createNotification(
+        workOrder.technician_id,
+        workOrder.id,
+        'feedback_submitted',
+        `工单${workOrder.order_no}收到农户反馈：${resultText}`
+      );
+    } catch (notifyErr) {
+      log.error('创建通知失败: %s', notifyErr.message);
     }
 
     log.api('反馈创建成功: feedback_id=%s', feedback.id);

@@ -1,7 +1,8 @@
-const { WorkOrder, WorkOrderImage, Diagnosis, Feedback, User, Greenhouse } = require('../models');
+const { WorkOrder, WorkOrderImage, Diagnosis, Feedback, User, Greenhouse, PestType } = require('../models');
 const { sequelize } = require('../config/database');
 const log = require('../utils/logger');
 const dayjs = require('dayjs');
+const { createNotification } = require('./notificationController');
 
 const generateOrderNo = () => {
   return 'WO' + dayjs().format('YYYYMMDDHHmmss') + Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -113,7 +114,7 @@ exports.detail = async (req, res, next) => {
         { model: User, as: 'farmer', attributes: ['id', 'real_name', 'phone'] },
         { model: User, as: 'technician', attributes: ['id', 'real_name', 'phone'] },
         { model: Greenhouse, as: 'greenhouse' },
-        { model: Diagnosis, as: 'diagnosis', include: [{ model: require('../models/PestType'), as: 'pest_type' }] },
+        { model: Diagnosis, as: 'diagnosis', include: [{ model: PestType, as: 'pest_type' }] },
         { model: Feedback, as: 'feedbacks' }
       ]
     });
@@ -129,25 +130,44 @@ exports.detail = async (req, res, next) => {
 };
 
 exports.claim = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
     const { id } = req.params;
     const technician_id = req.user.id;
     log.api('认领工单: order_id=%s, technician_id=%s', id, technician_id);
 
-    const workOrder = await WorkOrder.findByPk(id);
+    const workOrder = await WorkOrder.findByPk(id, {
+      lock: transaction.LOCK.UPDATE,
+      transaction
+    });
+
     if (!workOrder) {
+      await transaction.rollback();
       return res.status(404).json({ code: 404, message: '工单不存在' });
     }
 
+    if (workOrder.status === 'assigned' || workOrder.status === 'diagnosed' || 
+        workOrder.status === 'feedback_pending' || workOrder.status === 'completed' || 
+        workOrder.status === 'closed') {
+      await transaction.rollback();
+      if (workOrder.technician_id === technician_id) {
+        return res.status(400).json({ code: 400, message: '您已认领该工单' });
+      }
+      return res.status(400).json({ code: 400, message: '该工单已被其他农技员认领' });
+    }
+
     if (workOrder.status !== 'pending') {
-      return res.status(400).json({ code: 400, message: '该工单已被认领' });
+      await transaction.rollback();
+      return res.status(400).json({ code: 400, message: `工单当前状态为「${workOrder.status}」，无法认领` });
     }
 
     await workOrder.update({
       status: 'assigned',
       technician_id,
       assigned_at: new Date()
-    });
+    }, { transaction });
+
+    await transaction.commit();
 
     const result = await WorkOrder.findByPk(id, {
       include: [
@@ -158,9 +178,17 @@ exports.claim = async (req, res, next) => {
       ]
     });
 
+    try {
+      await createNotification(workOrder.farmer_id, workOrder.id, 'order_assigned', 
+        `工单 ${workOrder.order_no} 已被农技员认领`);
+    } catch (notifyErr) {
+      log.error('创建通知失败: %s', notifyErr.message);
+    }
+
     log.api('认领成功: order_id=%s', id);
     res.json({ code: 200, message: '认领成功', data: result });
   } catch (error) {
+    try { await transaction.rollback(); } catch (e) { log.error('事务回滚失败: %s', e.message); }
     next(error);
   }
 };
