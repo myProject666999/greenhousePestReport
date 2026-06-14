@@ -17,7 +17,7 @@ exports.create = async (req, res, next) => {
       return res.status(404).json({ code: 404, message: '工单不存在' });
     }
 
-    if (workOrder.farmer_id !== farmer_id) {
+    if (Number(workOrder.farmer_id) !== Number(farmer_id)) {
       return res.status(403).json({ code: 403, message: '您无权反馈此工单' });
     }
 

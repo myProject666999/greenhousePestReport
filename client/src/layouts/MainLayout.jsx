@@ -55,10 +55,18 @@ const MainLayout = () => {
 
   const menuItems = user?.role === 'farmer' ? farmerMenu : user?.role === 'technician' ? techMenu : adminMenu;
 
+  const handleUserMenuClick = ({ key }) => {
+    if (key === 'profile') {
+      navigate('/profile');
+    } else if (key === 'logout') {
+      logout();
+    }
+  };
+
   const userMenu = [
     { key: 'profile', icon: <SettingOutlined />, label: '个人中心' },
     { type: 'divider' },
-    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: logout }
+    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }
   ];
 
   return (
@@ -78,7 +86,7 @@ const MainLayout = () => {
             <Badge count={unreadCount}>
               <Button type="text" icon={<NotificationOutlined style={{ fontSize: 18 }} />} onClick={() => navigate(user?.role === 'farmer' ? '/farmer' : '/technician')} />
             </Badge>
-            <Dropdown menu={{ items: userMenu }} placement="bottomRight">
+            <Dropdown menu={{ items: userMenu, onClick: handleUserMenuClick }} placement="bottomRight">
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar style={{ backgroundColor: '#667eea' }}>{user?.real_name?.[0] || 'U'}</Avatar>
                 <span>{user?.real_name}</span>

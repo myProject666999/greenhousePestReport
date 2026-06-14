@@ -22,7 +22,7 @@ exports.create = async (req, res, next) => {
       return res.status(404).json({ code: 404, message: '工单不存在' });
     }
 
-    if (workOrder.technician_id !== technician_id) {
+    if (req.user.role !== 'admin' && Number(workOrder.technician_id) !== Number(technician_id)) {
       return res.status(403).json({ code: 403, message: '您无权诊断此工单' });
     }
 

@@ -150,7 +150,7 @@ exports.claim = async (req, res, next) => {
         workOrder.status === 'feedback_pending' || workOrder.status === 'completed' || 
         workOrder.status === 'closed') {
       await transaction.rollback();
-      if (workOrder.technician_id === technician_id) {
+      if (Number(workOrder.technician_id) === Number(technician_id)) {
         return res.status(400).json({ code: 400, message: '您已认领该工单' });
       }
       return res.status(400).json({ code: 400, message: '该工单已被其他农技员认领' });

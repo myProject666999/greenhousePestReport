@@ -21,6 +21,7 @@ import TechnicianDiagnose from './pages/TechnicianDiagnose';
 import StatsDashboard from './pages/StatsDashboard';
 import AdminGreenhouses from './pages/AdminGreenhouses';
 import AdminPestTypes from './pages/AdminPestTypes';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -36,12 +37,14 @@ function App() {
               <Route path="report" element={<FarmerReport />} />
               <Route path="orders" element={<FarmerOrders />} />
               <Route path="orders/:id" element={<WorkOrderDetail />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
 
             <Route path="/technician" element={<ProtectedRoute allowedRoles={['technician', 'admin']}><MainLayout /></ProtectedRoute>}>
               <Route index element={<TechnicianDashboard />} />
               <Route path="orders/:id" element={<WorkOrderDetail />} />
               <Route path="diagnose/:id" element={<TechnicianDiagnose />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
 
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout /></ProtectedRoute>}>
@@ -50,6 +53,7 @@ function App() {
               <Route path="diagnose/:id" element={<TechnicianDiagnose />} />
               <Route path="greenhouses" element={<AdminGreenhouses />} />
               <Route path="pest-types" element={<AdminPestTypes />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
 
             <Route path="/stats" element={<ProtectedRoute allowedRoles={['technician', 'admin']}><MainLayout /></ProtectedRoute>}>
