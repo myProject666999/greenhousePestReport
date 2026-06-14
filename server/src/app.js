@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const path = require('path');
 const morgan = require('morgan');
 const log = require('./utils/logger');
@@ -8,10 +7,12 @@ const { connectDB } = require('./config/database');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { startScheduledTasks } = require('./tasks/feedbackReminder');
+const { corsMiddleware, preflightHandler } = require('./middleware/cors');
 
 const app = express();
 
-app.use(cors());
+app.use(preflightHandler);
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

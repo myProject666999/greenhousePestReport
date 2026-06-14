@@ -78,6 +78,7 @@ buildSrc/build
 target/
 .claude/
 .trae/
+mysql_data/
 
 # OS / IDE
 .DS_Store
