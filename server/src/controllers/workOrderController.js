@@ -63,15 +63,11 @@ exports.list = async (req, res, next) => {
 
     if (req.user.role === 'farmer') {
       where.farmer_id = req.user.id;
-    } else if (req.user.role === 'technician') {
-      if (status === 'pending') {
-        where.status = 'pending';
-      } else {
-        where.technician_id = req.user.id;
-      }
+    } else if (req.user.role === 'technician' && status !== 'pending') {
+      where.technician_id = req.user.id;
     }
 
-    if (status && status !== 'pending') {
+    if (status) {
       where.status = status;
     }
 

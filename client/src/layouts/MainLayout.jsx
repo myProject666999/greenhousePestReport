@@ -55,18 +55,15 @@ const MainLayout = () => {
 
   const menuItems = user?.role === 'farmer' ? farmerMenu : user?.role === 'technician' ? techMenu : adminMenu;
 
-  const handleUserMenuClick = ({ key }) => {
-    if (key === 'profile') {
-      navigate('/profile');
-    } else if (key === 'logout') {
-      logout();
-    }
+  const handleProfileClick = () => {
+    const basePath = user?.role === 'farmer' ? '/farmer' : user?.role === 'technician' ? '/technician' : '/admin';
+    navigate(`${basePath}/profile`);
   };
 
   const userMenu = [
-    { key: 'profile', icon: <SettingOutlined />, label: '个人中心' },
+    { key: 'profile', icon: <SettingOutlined />, label: '个人中心', onClick: handleProfileClick },
     { type: 'divider' },
-    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }
+    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: logout }
   ];
 
   return (
@@ -86,7 +83,7 @@ const MainLayout = () => {
             <Badge count={unreadCount}>
               <Button type="text" icon={<NotificationOutlined style={{ fontSize: 18 }} />} onClick={() => navigate(user?.role === 'farmer' ? '/farmer' : '/technician')} />
             </Badge>
-            <Dropdown menu={{ items: userMenu, onClick: handleUserMenuClick }} placement="bottomRight">
+            <Dropdown menu={{ items: userMenu }} placement="bottomRight">
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar style={{ backgroundColor: '#667eea' }}>{user?.real_name?.[0] || 'U'}</Avatar>
                 <span>{user?.real_name}</span>
